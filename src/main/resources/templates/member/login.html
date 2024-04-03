@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Login</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" th:href="@{/assets/favicon.ico}">
+    <!-- Core theme CSS(includes Bootstrap -->
+    <link th:href="@{/css/styles.css}" rel="stylesheet" />
+</head>
+<body class="align-middle">
+    <div class="container-fluid d-flex justify-content-center" style="height:100vh">
+        <div class="card align-self-center">
+            <div class="card-header">
+                LOGIN Page
+            </div>
+            <div class="card-body">
+                <th:block th:if="${param.logout != null}">
+                    <h1>Logged out</h1>
+                </th:block>
+                <form id="registerForm" action="/member/login" method="post" th:if="${param.logout == null}">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">ID</span>
+                        <input type="text" name="username" class="form-control" placeholder="USER ID">
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">PW</span>
+                        <input type="password" name="password" class="form-control" placeholder="PASSWORD">
+                    </div>
+                    <div class="my-4">
+                        <div class="float-end">
+                            <button type="submit" class="btn-primary-submitBtn">LOGIN</button>
+                        </div>
+                    </div>
+                </form>
+                <div>
+                    <a href="/oauth2/authorization/kakao">KAKAO</a>
+                </div>
+            </div> <!-- end card body -->
+        </div> <!-- end card -->
+    </div>
+</body>
+</html>
