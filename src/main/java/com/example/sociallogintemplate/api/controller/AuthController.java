@@ -12,6 +12,8 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -78,8 +80,13 @@ public class AuthController {
             );
 
             userRefreshToken.updateRefreshToken(authRefreshToken.getToken());
+            refreshTokenRepository.save(userRefreshToken);
         }
 
-        return APIResponse.success("token", newAccessToken.getToken());
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put(ACCESS_TOKEN, newAccessToken.getToken());
+        tokens.put(REFRESH_TOKEN, userRefreshToken.getRefreshToken());
+
+        return APIResponse.success("tokens", tokens);
     }
 }
