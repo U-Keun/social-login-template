@@ -3,6 +3,7 @@ package com.example.sociallogintemplate.config;
 import com.example.sociallogintemplate.api.repository.RefreshTokenRepository;
 import com.example.sociallogintemplate.config.properties.AppProperties;
 import com.example.sociallogintemplate.config.properties.CorsProperties;
+import com.example.sociallogintemplate.oauth.endpoint.CustomRequestEntityConverter;
 import com.example.sociallogintemplate.oauth.entity.RoleType;
 import com.example.sociallogintemplate.oauth.exception.RestAuthenticationEntryPoint;
 import com.example.sociallogintemplate.oauth.filter.TokenAuthenticationFilter;
@@ -20,6 +21,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -59,6 +63,8 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .tokenEndpoint(endpoint -> endpoint
+                                .accessTokenResponseClient(accessTokenResponseClient()))
                         .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint
                                 .baseUri("/oauth2/authorization"))
                         .redirectionEndpoint(redirectionEndpoint -> redirectionEndpoint
@@ -112,5 +118,13 @@ public class SecurityConfig {
 
         corsConfigSource.registerCorsConfiguration("/**", corsConfig);
         return corsConfigSource;
+    }
+
+    @Bean
+    public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient(){
+        DefaultAuthorizationCodeTokenResponseClient accessTokenResponseClient = new DefaultAuthorizationCodeTokenResponseClient();
+        accessTokenResponseClient.setRequestEntityConverter(new CustomRequestEntityConverter());
+
+        return accessTokenResponseClient;
     }
 }
