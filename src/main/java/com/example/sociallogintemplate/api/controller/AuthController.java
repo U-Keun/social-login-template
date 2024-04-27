@@ -33,7 +33,7 @@ public class AuthController {
     private static final String REFRESH_TOKEN = "refresh_token";
 
     @PostMapping("/refresh")
-    public APIResponse refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    public APIResponse<Map<String, String>> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         String accessToken = HeaderUtil.getToken(request, ACCESS_TOKEN);
         Token authToken = tokenProvider.convertToken(accessToken);
         if (!authToken.validate()) {

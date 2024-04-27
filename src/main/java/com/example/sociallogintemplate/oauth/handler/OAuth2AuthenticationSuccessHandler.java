@@ -50,7 +50,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             HttpServletRequest request,
             HttpServletResponse response,
             Authentication authentication) {
-        String redirectUri = request.getParameter("redirect-uri");
+        String redirectUri = request.getParameter("redirect_uri");
         if (redirectUri.isEmpty() && !isAuthorizedRedirectUri(redirectUri)) {
             throw new IllegalArgumentException("접근이 허용되지 않는 Redirect URI입니다.");
         }
