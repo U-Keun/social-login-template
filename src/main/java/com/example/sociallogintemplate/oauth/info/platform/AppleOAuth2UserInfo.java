@@ -15,11 +15,11 @@ public class AppleOAuth2UserInfo extends OAuth2UserInfo {
 
     @Override
     public String getName() {
-        return "name";
+        return (String) attributes.get("name");
     }
 
     @Override
     public String getEmail() {
-        return "email";
+        return (String) attributes.get("email");
     }
 }

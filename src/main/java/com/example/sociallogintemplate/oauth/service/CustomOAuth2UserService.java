@@ -8,8 +8,17 @@ import com.example.sociallogintemplate.oauth.entity.UserPrincipal;
 import com.example.sociallogintemplate.oauth.exception.OAuth2ProviderException;
 import com.example.sociallogintemplate.oauth.info.OAuth2UserInfo;
 import com.example.sociallogintemplate.oauth.info.OAuth2UserInfoFactory;
+import com.example.sociallogintemplate.oauth.token.Token;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import javax.naming.AuthenticationException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -22,18 +31,19 @@ import org.springframework.stereotype.Service;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2User user = super.loadUser(userRequest);
+        ProviderType providerType = ProviderType.valueOf(userRequest
+                .getClientRegistration()
+                .getRegistrationId()
+                .toUpperCase());
+
+        Map<String, Object> userAttributes = getAttributes(userRequest, providerType);
 
         try {
-            ProviderType providerType = ProviderType.valueOf(userRequest
-                    .getClientRegistration()
-                    .getRegistrationId()
-                    .toUpperCase());
-
-            OAuth2UserInfo userInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(providerType, user.getAttributes());
+            OAuth2UserInfo userInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(providerType, userAttributes);
             User savedUser = userRepository.findByUserId(userInfo.getId());
 
             if (savedUser != null) {
@@ -45,7 +55,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             } else {
                 savedUser = createUser(userInfo, providerType);
             }
-            return UserPrincipal.create(savedUser, user.getAttributes());
+            return UserPrincipal.create(savedUser, userAttributes);
 //        } catch (AuthenticationException e) {
 //            throw e;
         } catch (Exception e) {
@@ -69,5 +79,31 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user.setUsername(userInfo.getName());
         }
         return user;
+    }
+
+    private Map<String, Object> getAttributes(OAuth2UserRequest request, ProviderType providerType) {
+        if (providerType.equals(ProviderType.APPLE)) {
+            return decodeAppleJwtTokenPayload(request.getAdditionalParameters().get("id_token").toString());
+        }
+        OAuth2User user = super.loadUser(request);
+        return user.getAttributes();
+    }
+    private Map<String, Object> decodeAppleJwtTokenPayload(String appleIdToken) {
+        Map<String, Object> jwtClaims = new HashMap<>();
+        try {
+            String[] parts = appleIdToken.split("\\.");
+            Base64.Decoder decoder = Base64.getUrlDecoder();
+
+            byte[] decodedBytes = decoder.decode(parts[1].getBytes(StandardCharsets.UTF_8));
+            String decodedString = new String(decodedBytes, StandardCharsets.UTF_8);
+            ObjectMapper mapper = new ObjectMapper();
+
+            Map<String, Object> map = mapper.readValue(decodedString, Map.class);
+            jwtClaims.putAll(map);
+            jwtClaims.put("id_token", appleIdToken);
+        } catch (JsonProcessingException e) {
+            logger.error("decodeJwtToken: {}-{} / jwtToken : {}", e.getMessage(), e.getCause(), appleIdToken);
+        }
+        return jwtClaims;
     }
 }

@@ -60,6 +60,11 @@ dependencies {
 
     // Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+
+    // Apple 로그인 연동시 필요한 설정
+    implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '9.30.1'
+    implementation group: 'org.bouncycastle', name: 'bcpkix-jdk15on', version: '1.70'
+    implementation 'org.apache.directory.studio:org.apache.commons.io:2.4'
 }
 
 tasks.named('test') {
